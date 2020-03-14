@@ -1,12 +1,13 @@
 use rug::float::Round;
 use rug::ops::DivAssignRound;
+use rug::ops::Pow;
 use rug::Float;
 
 use rug::Rational;
 use rug::Integer;
 use core::cmp::Ordering;
 
-fn rational_to_float(ration: &Rational ,precision: u32) -> Float {
+fn _rational_to_float(ration: &Rational ,precision: u32) -> Float {
     let numer = ration.numer();
     let denom = ration.denom();
     let mut fl = Float::with_val(precision, numer);
@@ -22,7 +23,7 @@ fn _leibniz_rational(precision: u32) -> Float {
     
     loop {
         if i.mod_u(175000) == 0 {
-            let pi_float = rational_to_float(&pi, precision);
+            let pi_float = _rational_to_float(&pi, precision);
             match pi_float.get_exp() {
                 Some(num) if num > precision as i32 => break,
                 _ => (),
@@ -40,7 +41,7 @@ fn _leibniz_rational(precision: u32) -> Float {
         i += 1;
     }
 
-    rational_to_float(&pi, precision)
+    _rational_to_float(&pi, precision)
 }
 
 fn _leibniz(precision: u32) -> Float {
@@ -73,28 +74,38 @@ fn _leibniz(precision: u32) -> Float {
 }
 
 // https://en.wikipedia.org/wiki/Chudnovsky_algorithm
-//fn _chudnovski(precision: u32) -> Float {
-//    let mut K = 6;
-//    let mut X = 1;
-//    let mut M = 1;
-//    let mut L = 13591409;
-//    let mut sum = 13591409;
-//
-//    loop {
-//        
-//        L += 545140134;
-//        X *= -262537412640768000;
-//        K += 12;
-//        break;
-//    }
-//
-//    Float::new(precision)
-//}
+fn _chudnovski(precision: u32) -> Float {
+    let mut big_k = Integer::from(6);
+    let mut x = Integer::from(1);
+    let mut m = Integer::from(1);
+    let mut l = Integer::from(13591409);
+    let mut sum = Float::with_val(precision, 13591409);
+    let mut small_k = Integer::from(0);
+
+    loop {
+        let k_3 = Integer::from((&big_k).pow(3));
+        m = Integer::from(&k_3 - (16 * &big_k)) * &m / &k_3;
+        l += 545140134;
+        x *= -262537412640768000_i64;
+        sum += Float::with_val(precision, Integer::from(&m * &l) / &x);
+        big_k += 12;
+        small_k += 1;
+
+        if small_k > 1000000 {
+            break;
+        }
+    }
+
+    let c = Float::with_val(precision, 10005).root(2) * 426880;
+    let pi : Float = &c / sum;
+    //println!("{}", c);
+    pi
+}
 
 fn main() {
-    let precision = 20;
+    let precision = 60;
     let _one = Float::with_val(precision, 1);
-    let pi = _leibniz_rational(precision);
+    let pi = _chudnovski(precision);
 
     let pi_string = pi.to_string_radix(10, None);
     let mut pi_string = pi.to_string_radix(10, Some(pi_string.len() - 3));
