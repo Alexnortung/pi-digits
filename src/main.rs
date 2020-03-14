@@ -91,7 +91,7 @@ fn _chudnovski(precision: u32) -> Float {
         big_k += 12;
         small_k += 1;
 
-        if small_k > 1000000 {
+        if small_k > 100000 {
             break;
         }
     }
@@ -103,7 +103,7 @@ fn _chudnovski(precision: u32) -> Float {
 }
 
 fn main() {
-    let precision = 60;
+    let precision = 100;
     let _one = Float::with_val(precision, 1);
     let pi = _chudnovski(precision);
 
